@@ -1,7 +1,7 @@
 // 64-channel-scrollback — A sends 100 messages; B's first /recv returns last 50.
 
 import { Assert } from "../lib/assert.mjs"
-import { httpPost } from "../lib/relay.mjs"
+import { httpPost, RELAY_HTTP } from "../lib/relay.mjs"
 import { startChannelHost } from "../lib/channel.mjs"
 
 export default async function () {
@@ -10,9 +10,10 @@ export default async function () {
   try {
     const tb = ch.tokenBase.replace(/^https?:\/\/[^/]+/, "")
 
-    // Fire 100 sends in batches of 8 (relay caps at 10 inflight/session).
+    // Fire 100 sends in batches of 8. Concurrent sends can reorder over the
+    // internet, and this test checks order, so send one at a time remotely.
     const N = 100
-    const BATCH = 8
+    const BATCH = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(RELAY_HTTP) ? 8 : 1
     for (let i = 0; i < N; i += BATCH) {
       const batch = []
       for (let j = 0; j < BATCH && i + j < N; j++) {
