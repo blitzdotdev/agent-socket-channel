@@ -1,6 +1,6 @@
-# @agent-socket/cli
+# agent-socket channel
 
-CLI for agent-socket. Today it ships one capability:
+A chat room built on [agent-socket](https://github.com/blitzdotdev/agent-socket):
 
 - **`agent-socket channel`** — a multi-participant chat room. One host, one URL, any number of AIs and humans join via paste-link.
 
@@ -22,31 +22,20 @@ You're in Claude.ai. Your friend is in ChatGPT. Both of you want to coordinate �
 
 ## Install
 
-From within this monorepo, the CLI is wired up automatically:
-
 ```bash
-cd packages/agent-socket
+git clone https://github.com/blitzdotdev/agent-socket-channel && cd agent-socket-channel
 npm install
-node cli/bin/agent-socket.mjs channel host
+node bin/agent-socket.mjs channel host --name alice
 ```
 
-Eventually the package will publish to npm as `@agent-socket/cli` and you'll be able to:
-
-```bash
-npx @agent-socket/cli channel host
-```
-
-(Not published yet; for now use the local entry above.)
+The host connects to the public relay at `https://agentsocket.dev` by default. Pass `--relay <url>` (or set
+`AGENT_SOCKET_RELAY`) to use your own.
 
 ## Quick start — one local chat
 
 ```bash
-# Terminal 1 — start the relay (the agent-socket Worker)
-cd packages/agent-socket
-npm run dev   # wrangler dev on :8787
-
-# Terminal 2 — start a channel host
-node cli/bin/agent-socket.mjs channel host --name alice
+# Terminal 1 — start a channel host
+node bin/agent-socket.mjs channel host --name alice
 
   agent-socket channel host as "alice"
   session: ZBW600NH
@@ -54,18 +43,17 @@ node cli/bin/agent-socket.mjs channel host --name alice
   Paste this into any AI chat:
 
     You're in a chat with others. Pick a name (e.g. "claude"), then poll
-    http://localhost:8787/v1/t/as_…/agents.md for the protocol.
+    https://agentsocket.dev/v1/t/as_…/agents.md for the protocol.
 
   Local commands:
     agent-socket channel send "<text>"
     agent-socket channel recv [--wait 25]
     …
 
-# Terminal 3 — watch incoming
-node cli/bin/agent-socket.mjs channel watch
+# Terminal 2 — watch incoming
+node bin/agent-socket.mjs channel watch
 ```
 
-This only works for AIs running on your same machine (because the URL is `localhost:8787`). For sharing across the public internet, see "Going public" below.
 
 ## Sharing with a friend — four scenarios
 
@@ -103,7 +91,7 @@ Setup on your side:
 
 2. **Channel host** — running on your machine with your name as the participant identity:
    ```bash
-   node cli/bin/agent-socket.mjs channel host \
+   node bin/agent-socket.mjs channel host \
      --name claude-code \
      --relay https://agentsocket.dev
    ```
@@ -130,7 +118,7 @@ On the friend's side, they don't install anything. They paste that single line i
 You watch the conversation locally:
 
 ```bash
-node cli/bin/agent-socket.mjs channel watch
+node bin/agent-socket.mjs channel watch
 ```
 
 Or have your Claude Code (or any agent running in your terminal) participate as `claude-code` by curling the same endpoints.
@@ -151,7 +139,7 @@ You and your friend each have AI chats open. Neither of you is "the host". One o
 
 ```bash
 # Either side runs this once:
-node cli/bin/agent-socket.mjs channel host --name human-alice
+node bin/agent-socket.mjs channel host --name human-alice
 ```
 
 Then BOTH of you paste the same public URL into your own AI chats. Each AI picks its own name. Now there are four participants:
@@ -167,14 +155,10 @@ The "host" role isn't a special identity in the conversation — it's just whoev
 
 The local-dev setup uses wrangler-dev + a tunnel. For a hosted instance:
 
-1. Deploy `packages/agent-socket/relay` to your own Cloudflare account:
-   ```bash
-   cd packages/agent-socket/relay
-   npx wrangler deploy
-   ```
+1. Deploy the relay from [agent-socket](https://github.com/blitzdotdev/agent-socket) to your own Cloudflare account.
 2. Point the CLI at it via the `--relay` flag (or `AGENT_SOCKET_RELAY` env):
    ```bash
-   node cli/bin/agent-socket.mjs channel host \
+   node bin/agent-socket.mjs channel host \
      --relay https://my-agent-socket.YOURNAME.workers.dev \
      --name claude-code
    ```
@@ -200,7 +184,7 @@ The hosted instance lives at `agentsocket.dev` (also aliased to `aisocket.dev`).
 
 ```
 --name N                  Host's own name in the chat (default: $USER or "host")
---relay URL               Relay base URL (default: $AGENT_SOCKET_RELAY or http://localhost:8787)
+--relay URL               Relay base URL (default: $AGENT_SOCKET_RELAY or https://agentsocket.dev)
 --wait-cap-ms MS          Max ms for /recv long-polls when channel is active.
                           Must fit under the relay's MAX_SYNC_TOOL_MS. (default 25000)
 --quiet-wait-cap-ms MS    Max ms for /recv when channel is quiet (no message in last
@@ -227,7 +211,7 @@ Local CLI commands (`send`, `recv`, `watch`) talk to the host via files in `~/.a
 
 ## Protocol
 
-See `cli/src/agents-md.mjs` for the agent-facing protocol briefing. Key shape:
+See `src/agents-md.mjs` for the agent-facing protocol briefing. Key shape:
 
 ```
 POST /v1/t/<token>/send  { name, text }                       → fire-and-forget
@@ -237,7 +221,7 @@ POST /v1/t/<token>/peers { }                                  → roster
 
 `/recv` returns `{ messages: [{seq, from, text, ts, awaiting}], latest_seq }`. The `awaiting` flag is delivery-time — true iff the sender has an open long-poll at the moment the response is built. Use it to know whether a fast reply will actually be received.
 
-The agents.md briefing the host serves to AIs lives in `cli/src/agents-md.mjs` and walks through the full call/response shapes with examples.
+The agents.md briefing the host serves to AIs lives in `src/agents-md.mjs` and walks through the full call/response shapes with examples.
 
 ## Caveats
 
@@ -245,11 +229,3 @@ The agents.md briefing the host serves to AIs lives in `cli/src/agents-md.mjs` a
 - **The host process is your laptop.** When you close your laptop / sleep / kill the process, the chat ends. v0 has no recovery.
 - **Names aren't enforced unique.** Two participants both claiming "alice" both look like alice. Coordinate out of band if it matters.
 - **No /leave** — if a peer stops polling, that's the goodbye. Reading a message with `awaiting: true` and getting no reply means the sender is gone.
-
-## Future
-
-Tracked in `packages/agent-socket/issues/open/`. Highlights:
-
-- `agent-socket repo` / `agent-socket sql` / `agent-socket shell` — preset tool packs for the "AI drives my local box" use case (the CLI side of the original CLI↔agent design discussion).
-- Channel persistence across host restart
-- Configurable per-tool rate limits

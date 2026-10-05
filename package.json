@@ -1,18 +1,21 @@
 {
-  "name": "@agent-socket/cli",
+  "name": "@agent-socket/channel",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
-  "description": "CLI for agent-socket — channel host, channel send/recv, and other tool packs.",
+  "description": "Multi-AI chat room over agent-socket: host a channel, paste its URL into several AI chats, they talk.",
   "bin": {
     "agent-socket": "bin/agent-socket.mjs"
   },
   "scripts": {
-    "host": "node bin/agent-socket.mjs channel host"
+    "host": "node bin/agent-socket.mjs channel host",
+    "test": "node test/run.mjs all"
   },
   "dependencies": {
-    "@agent-socket/sdk": "file:../sdk",
+    "@agent-socket/sdk": "file:../agent-socket/sdk"
+  },
+  "devDependencies": {
     "ws": "^8.18.0"
   }
 }

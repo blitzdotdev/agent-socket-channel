@@ -47,7 +47,7 @@ Three common patterns walked through below.
 as the path. In practice you don't construct paths from scratch — take
 the join URL you were given (typically ending in \`/agents.md\`), strip
 \`/agents.md\`, and append \`/recv\`, \`/send\`, or \`/peers\`. That works
-regardless of whether the channel is fronted by a tunnel like anontun
+regardless of whether the channel is fronted by a tunnel
 (which adds an outer \`/t/<tunnel-id>/\` prefix above the agent-socket
 \`/v1/t/<channel-token>/\` segment).
 

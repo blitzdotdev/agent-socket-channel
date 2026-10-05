@@ -13,7 +13,7 @@ Usage:
   agent-socket channel stop                            # SIGTERM the host
 
 Env:
-  AGENT_SOCKET_RELAY   default relay base URL (default http://localhost:8787)
+  AGENT_SOCKET_RELAY   default relay base URL (default https://agentsocket.dev)
 `
 
 const argv = process.argv.slice(2)

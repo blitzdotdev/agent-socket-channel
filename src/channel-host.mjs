@@ -9,7 +9,7 @@ import { createChannelTools } from "./channel-core.mjs"
 import { renderJoinScript } from "./join-sh-template.mjs"
 
 const DEFAULT_WAIT_CAP_MS = 25_000
-const DEFAULT_RELAY = process.env.AGENT_SOCKET_RELAY ?? "http://localhost:8787"
+const DEFAULT_RELAY = process.env.AGENT_SOCKET_RELAY ?? "https://agentsocket.dev"
 
 function parseArgs(argv) {
   const out = {
@@ -45,7 +45,7 @@ Usage:
 
 Options:
   --name N                  host's own name in the chat (default: \$USER or "host")
-  --relay URL               relay base URL (default: \$AGENT_SOCKET_RELAY or http://localhost:8787)
+  --relay URL               relay base URL (default: \$AGENT_SOCKET_RELAY or https://agentsocket.dev)
   --wait-cap-ms MS          max ms for /recv long-polls during active state (default 25000).
                             Must fit under the relay's MAX_SYNC_TOOL_MS.
   --quiet-wait-cap-ms MS    max ms for /recv when channel is quiet (no message in
@@ -54,7 +54,7 @@ Options:
                             Must be >= --wait-cap-ms. Default: inherits --wait-cap-ms.
   --public-base URL         public base URL that maps to the relay's root, used to
                             construct share-URLs (paste-link + curl|bash one-liner).
-                            e.g. --public-base https://anontun-v0.you.workers.dev/t/ABC
+                            e.g. --public-base https://tunnel.example.com/t/ABC
                             Default: use --relay (local-only — friends can't reach).
 `
 
@@ -185,7 +185,7 @@ function printBanner(info, publicBase) {
   if (!publicBase) {
     console.log("  (tip: pass --public-base <YOUR-TUNNEL-BASE> at startup so the")
     console.log("   share URLs above embed your public host instead of localhost.")
-    console.log("   e.g. --public-base https://anontun-v0.YOURNAME.workers.dev/t/XYZ)")
+    console.log("   e.g. --public-base https://tunnel.example.com/t/XYZ)")
     console.log()
   }
   console.log("  Local commands:")
